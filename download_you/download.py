@@ -3,6 +3,10 @@ from pytube import Playlist
 import subprocess
 from multiprocessing import Pool
 
+# Functin to download whole playlist at once woth multiprocessing.
+def download_video(command):
+        # Execute the command in multi-processing
+        return subprocess.run(command, check=True)
 
 # Function to download a single Youtube video.
 def download_single_video():
@@ -13,20 +17,10 @@ def download_single_video():
     command = ['yt-dlp', '-f', 'mp4','-o',f'C:\\Users\\admin\\Desktop\\down_videos\\%(title)s.%(ext)s', video_url]
 
     # Execute the command
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = download_video(command)
 
     # Output the result
-    print(result.stdout)
-    print(result.stderr)
-
-
-
-
-# Functin to download whole playlist at once woth multiprocessing.
-def down_videos(command):
-        # Execute the command in multi-processing
-        return subprocess.run(command, check=True)
-
+    print(result)
 
 # Functin to download whole playlist at once.
 def download_playlist():
@@ -50,7 +44,7 @@ def download_playlist():
 
     
     # Get playlis url from user.
-    playlist_url = "https://www.youtube.com/watch?v=3jEw_atbO5M&list=PLj5GWDBCMHnZ1XApnYCAPz874rWmrlodT&pp=gAQBiAQB"
+    playlist_url = input("Enter the playlist url: ")
     # Fetch the playlist name.
     playlist_name = get_playlist_name(playlist_url)
     # Specify the downloaded video file path
@@ -80,41 +74,77 @@ def download_playlist():
 
 
     commands = every_command()
-    print(commands)
-    print(len(commands))
-
-    #for command in commands:
-        #print(down_videos(command))
+    print(f"No. of videos = {len(commands)}")
 
     try :
         with Pool(processes=len(commands)) as pool:
-            pool.map(down_videos, commands)
+            pool.map(download_video, commands)
 
     except:
         RuntimeError
 
-
-
-
-# This function is left to complete.
+# Function to download many videos at on (given urls).
 def download_many_videos():
-    # URL of the YouTube video you want to download
-    video_url = input("Enter the video url: ")
     
-    # Command to download the best quality video using yt-dlp
-    command = ['yt-dlp', '-f', 'b','-o',f'C:\\Users\\admin\\Desktop\\down_videos\\%(title)s.%(ext)s', video_url]
+    def url_list():
+        # Initialize an empty list to store inputs
+        urls = []
 
-    # Execute the command
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        # Start an infinite loop
+        while True:
+            # Prompt the user for input
+            url = input("Enter a value (or type 'done' to finish): ")
+            
+            # Check if the user wants to exit the loop
+            if url.lower() == 'done':
+                break
+            
+            # Append the input to the list
+            urls.append(url)
 
-    # Output the result
-    print(result.stdout)
-    print(result.stderr)
+        # Print the resulting list
+        return urls
 
 
+    # Fetch the playlist/file folder  name.
+    playlist_name = input("Enter the folder name: ")
+    # Specify the downloaded video file path
+    download_path = f'C:\\Users\\admin\\Desktop\\down_videos\\%s' % playlist_name
 
+    
+    # Ensure the download path exists
+    if not os.path.exists(download_path):
+        os.makedirs(download_path)
 
+    def every_command():
+        # Calling the get url of playlist function
+        all_urls = url_list()
+        commands_in = []
+        for url in all_urls:
+            # Build the yt-dlp command
+            command = [
+                'yt-dlp',
+                '-o', os.path.join(download_path, '%(title)s.%(ext)s'),
+                '-f','mp4',
+                url
+            ]
+            commands_in.append(command)
+        return commands_in
+    
+    
 
+    commands = every_command()
+    print(commands)
+    print(len(commands))
+
+    try :
+        with Pool(processes=len(commands)) as pool:
+            pool.map(download_video, commands)
+
+    except:
+        RuntimeError
+
+# Main function.
 def main():
 
     print("1.Download single Youtube video \n2.Download Youtube playlist \n3.Download many Youtube videos")
