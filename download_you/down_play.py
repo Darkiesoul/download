@@ -30,7 +30,7 @@ def download_playlist():
     # Fetch the playlist name.
     playlist_name = get_playlist_name(playlist_url)
     # Specify the downloaded video file path
-    download_path = f'C:\\Users\\Suraj\\Desktop\\down_videos\\%s' % playlist_name
+    download_path = f'C:\\Users\\admin\\Desktop\\down_videos\\%s' % playlist_name
 
     
     # Ensure the download path exists
