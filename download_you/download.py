@@ -1,7 +1,7 @@
 import os
 from pytube import Playlist
 import subprocess
-#import get_channel_url
+from multiprocessing import Pool
 
 
 # Function to download a single Youtube video.
@@ -20,6 +20,12 @@ def download_single_video():
     print(result.stderr)
 
 
+
+
+# Functin to download whole playlist at once woth multiprocessing.
+def down_videos(command):
+        # Execute the command in multi-processing
+        return subprocess.run(command, check=True)
 
 
 # Functin to download whole playlist at once.
@@ -44,30 +50,48 @@ def download_playlist():
 
     
     # Get playlis url from user.
-    playlist_url = input("Enter the playlist url: ")
+    playlist_url = "https://www.youtube.com/watch?v=3jEw_atbO5M&list=PLj5GWDBCMHnZ1XApnYCAPz874rWmrlodT&pp=gAQBiAQB"
     # Fetch the playlist name.
     playlist_name = get_playlist_name(playlist_url)
     # Specify the downloaded video file path
     download_path = f'C:\\Users\\admin\\Desktop\\down_videos\\%s' % playlist_name
 
-    # Calling the get url of playlist function
-    playlist_urls = fetch_video_urls(playlist_url)
-
+    
     # Ensure the download path exists
     if not os.path.exists(download_path):
         os.makedirs(download_path)
 
-    # Build the yt-dlp command
-    command = [
-        'yt-dlp',
-        '-o', os.path.join(download_path, '%(title)s.%(ext)s'),
-        '-f','mp4',
-        playlist_url
-    ]
+    def every_command():
+        # Calling the get url of playlist function
+        playlist_urls = fetch_video_urls(playlist_url)
+        commands_in = []
+        for url in playlist_urls:
+            # Build the yt-dlp command
+            command = [
+                'yt-dlp',
+                '-o', os.path.join(download_path, '%(title)s.%(ext)s'),
+                '-f','mp4',
+                url
+            ]
+            commands_in.append(command)
+        return commands_in
+    
+    
 
-    # Execute the command in multi-processing
-    result = subprocess.run(command, check=True)
 
+    commands = every_command()
+    print(commands)
+    print(len(commands))
+
+    #for command in commands:
+        #print(down_videos(command))
+
+    try :
+        with Pool(processes=len(commands)) as pool:
+            pool.map(down_videos, commands)
+
+    except:
+        RuntimeError
 
 
 
