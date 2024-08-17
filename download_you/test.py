@@ -26,7 +26,7 @@ def download_playlist():
     playlist_name = get_playlist_name(playlist_url)
     
     # Specify the download path
-    download_path = f'C:\\Users\\Suraj\\Desktop\\down_videos\\%s' % playlist_name
+    download_path = f'C:\\Users\\admin\\Desktop\\down_videos\\%s' % playlist_name
     
     # Ensure the download path exists
     if not os.path.exists(download_path):
