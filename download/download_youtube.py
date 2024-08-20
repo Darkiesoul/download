@@ -12,6 +12,11 @@ class YouTubeDownloader:
 
     def download_video(self, command):
         return subprocess.run(command, check=True)
+    
+    def execute_commands(self, commands):
+        print(f"No. of videos = {len(commands)}")
+        with Pool(processes=min(len(commands), os.cpu_count())) as pool:
+            pool.map(self.download_video, commands)
 
     def download_single_video(self, video_url):
         command = ['yt-dlp', '-f', 'mp4', '-o', os.path.join(self.download_path, '%(title)s.%(ext)s'), video_url]
@@ -80,48 +85,6 @@ class YouTubeDownloader:
         commands = self.create_commands(channel_video_urls, download_path)
         self.execute_commands(commands)
 
-    def execute_commands(self, commands):
-        print(f"No. of videos = {len(commands)}")
-        with Pool(processes=min(len(commands), os.cpu_count())) as pool:
-            pool.map(self.download_video, commands)
-
-    def get_instagram_profile_info(self, profile_name):
-        # Create an instance of Instaloader class
-        L = instaloader.Instaloader()
-
-        try:
-            # Load the profile
-            profile = instaloader.Profile.from_username(L.context, profile_name)
-            print(profile)
-            # Get the profile name
-            full_name = profile.full_name
-            
-            # Initialize an empty list to hold post URLs
-            post_urls = []
-
-            # Loop through all posts in the profile and append their URLs to the list
-            for post in profile.get_posts():
-                post_url = f"https://www.instagram.com/p/{post.shortcode}/"
-                post_urls.append(post_url)
-
-            return full_name, post_urls
-    
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return None, None
-        
-    def down_insta_profile(self, profile_name):
-        profile_full_name, post_urls = self.get_instagram_profile_info(profile_name)
-        
-        print(f"Profile Name: {profile_full_name}")
-        
-        download_path = os.path.join(self.download_path, profile_full_name)
-        if not os.path.exists(download_path):
-            os.makedirs(download_path)
-
-        commands = self.create_commands(post_urls, download_path)
-        self.execute_commands(commands)
-
     def main(self):
         print("1. Download single Youtube/Instagram video \n2. Download Youtube playlist \n3. Download many Youtube/Instagram videos \n4. Download whole youtube channel \n5. Download whole instagram profile reels.")
         choice = int(input("Enter the number: "))
@@ -150,13 +113,7 @@ class YouTubeDownloader:
             foldername = input("Enter the channel name : ")
 
             self.download_channel(video, short, foldername)
-
-        elif choice == 5:
-            profile_name = input("Enter the Instagram profile name : ")
             
-            self.down_insta_profile(profile_name)
-            
-
 
 if __name__ == "__main__":
     downloader = YouTubeDownloader('C:\\Users\\Suraj\\Desktop\\down_videos')
