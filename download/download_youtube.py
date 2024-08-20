@@ -1,7 +1,10 @@
-import os
+import yt_dlp
+import instaloader
 from pytube import Playlist
+import os
 import subprocess
 from multiprocessing import Pool
+
 
 class YouTubeDownloader:
     def __init__(self, download_path):
@@ -9,6 +12,11 @@ class YouTubeDownloader:
 
     def download_video(self, command):
         return subprocess.run(command, check=True)
+    
+    def execute_commands(self, commands):
+        print(f"No. of videos = {len(commands)}")
+        with Pool(processes=min(len(commands), os.cpu_count())) as pool:
+            pool.map(self.download_video, commands)
 
     def download_single_video(self, video_url):
         command = ['yt-dlp', '-f', 'mp4', '-o', os.path.join(self.download_path, '%(title)s.%(ext)s'), video_url]
@@ -46,13 +54,39 @@ class YouTubeDownloader:
             for url in urls
         ]
 
-    def execute_commands(self, commands):
-        print(f"No. of videos = {len(commands)}")
-        with Pool(processes=min(len(commands), os.cpu_count())) as pool:
-            pool.map(self.download_video, commands)
+    def get_all_video_urls(self, channel_url):
+        ydl_opts = {
+            'extract_flat': True,  # Extract video URLs without downloading them
+            'quiet': True,
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            result = ydl.extract_info(channel_url, download=False)
+
+        # Check if it's a playlist or a channel
+        if 'entries' in result:
+            # Extract video URLs
+            video_urls = [f"https://www.youtube.com/watch?v={entry['id']}" for entry in result['entries']]
+            return video_urls
+        else:
+            print("No videos found.")
+            return []
+
+    def download_channel(self, video, short, foldername):
+        channel_video_urls = self.get_all_video_urls(video)
+        channel_short_urls = self.get_all_video_urls(short)
+
+        channel_video_urls.extend(channel_short_urls)
+
+        download_path = os.path.join(self.download_path, foldername)
+        if not os.path.exists(download_path):
+            os.makedirs(download_path)
+
+        commands = self.create_commands(channel_video_urls, download_path)
+        self.execute_commands(commands)
 
     def main(self):
-        print("1. Download single Youtube video \n2. Download Youtube playlist \n3. Download many Youtube videos")
+        print("1. Download single Youtube/Instagram video \n2. Download Youtube playlist \n3. Download many Youtube/Instagram videos \n4. Download whole youtube channel \n5. Download whole instagram profile reels.")
         choice = int(input("Enter the number: "))
 
         if choice == 1:
@@ -73,7 +107,14 @@ class YouTubeDownloader:
             folder_name = input("Enter the folder name: ")
             self.download_many_videos(urls, folder_name)
 
+        elif choice == 4:
+            video = input("Enter the video channel channel url : ")
+            short = input("Enter the short channel channel url : ")
+            foldername = input("Enter the channel name : ")
+
+            self.download_channel(video, short, foldername)
+            
 
 if __name__ == "__main__":
-    downloader = YouTubeDownloader('C:\\Users\\admin\\Desktop\\down_videos')
+    downloader = YouTubeDownloader('C:\\Users\\Suraj\\Desktop\\down_videos')
     downloader.main()
