@@ -106,7 +106,9 @@ class YouTubeDownloader:
         :return: A list of download commands.
         """
         return [
-            ['yt-dlp', '-o', os.path.join(download_path, '%(title)s.%(ext)s'), '-f', 'mp4', url]
+            ['yt-dlp', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
+                '--merge-output-format', 'mp4',
+                '-o', os.path.join(download_path, '%(title)s.%(ext)s'), url]
             for url in urls
         ]
 
