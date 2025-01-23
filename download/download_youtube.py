@@ -1,5 +1,4 @@
 import yt_dlp
-import instaloader
 from pytube import Playlist
 import os
 import subprocess
@@ -25,7 +24,11 @@ class YouTubeDownloader:
         :param command: The download command to execute.
         :return: The result of the subprocess.run command.
         """
-        return subprocess.run(command, check=True)
+        try:
+            result = subprocess.run(command, check=True)
+            return result
+        except subprocess.CalledProcessError as e:
+            print(f"Error downloading video: {e}. Skipping to the next video.")
     
     def execute_commands(self, commands):
         """
@@ -156,9 +159,9 @@ class YouTubeDownloader:
         commands = self.create_commands(channel_video_urls, download_path)
         self.execute_commands(commands)
 
-    def main(self):
+    def __call__(self):
         """
-        Main function to prompt user input and download videos accordingly.
+        Call function to enable the callability of this class.
         """
         print("1. Download single Youtube video \n2. Download Youtube playlist \n3. Download many Youtube videos \n4. Download whole youtube channel ")
         choice = int(input("Enter the number: "))
@@ -194,5 +197,5 @@ class YouTubeDownloader:
 
 if __name__ == "__main__":
     # Replace 'C:\\Users\\Suraj\\Desktop\\down_videos' with your desired download path
-    downloader = YouTubeDownloader('C:\\Users\\Suraj\\Desktop\\down_videos')
-    downloader.main()
+    downloader = YouTubeDownloader('C:\\Users\\admin\\Desktop\\down_videos')
+    downloader()
